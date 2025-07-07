@@ -10,7 +10,6 @@ import os
 from datetime import datetime
 import io
 
-# Load and preprocess data (no os.chdir)
 @st.cache_data
 def load_and_preprocess_data():
     try:
@@ -49,10 +48,10 @@ def load_and_preprocess_data():
     
     return data, preprocessor, model
 
-# Streamlit app configuration (first command)
+
 st.set_page_config(page_title="Advanced Pricing Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-# Custom CSS for advanced theme
+
 st.markdown("""
     <style>
     .stApp { background-color: #e9ecef; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -63,12 +62,12 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# App title and branding
+
 st.image("https://via.placeholder.com/150", width=150)  # Replace with your logo URL or local file
 st.title("Advanced Dynamic Pricing Dashboard")
 st.caption("Optimize hotel pricing with real-time predictions and market insights.")
 
-# Help section
+
 with st.expander("Dashboard Guide"):
     st.write("""
     - **Configure Scenario**: Adjust inputs in the sidebar for real-time pricing.
@@ -77,12 +76,12 @@ with st.expander("Dashboard Guide"):
     - **Export**: Download a report of your analysis.
     """)
 
-# Load data and model
+
 data, preprocessor, model = load_and_preprocess_data()
 if data is None or preprocessor is None or model is None:
     st.stop()
 
-# Sidebar for input features
+
 st.sidebar.header("Scenario Configuration")
 city = st.sidebar.selectbox("Select City", data['city'].unique(), index=0)
 hotel_type = st.sidebar.selectbox("Select Hotel Type", data['hotel_type'].unique(), index=0)
@@ -91,7 +90,7 @@ alt_occupancy = st.sidebar.slider("Alternate Occupancy Rate (%)", 50, 100, 90, 1
 competitor_adr = st.sidebar.slider("Competitor ADR (INR)", int(data['competitor_adr'].min()), int(data['competitor_adr'].max()), 14459, 100)
 is_peak_season = st.sidebar.checkbox("Peak Season", value=True)
 
-# Prepare input data for base and alternate scenarios
+
 base_input = pd.DataFrame({
     'city': [city], 'hotel_type': [hotel_type], 'room_type': ['Suite'],
     'customer_segment': ['Leisure'], 'length_of_stay': [7], 'adults': [2],
@@ -103,7 +102,7 @@ base_input = pd.DataFrame({
 alt_input = base_input.copy()
 alt_input['occupancy_rate'] = alt_occupancy
 
-# Predict prices
+
 try:
     base_processed = preprocessor.transform(base_input)
     base_price = model.predict(base_processed)[0]
@@ -113,7 +112,7 @@ except Exception as e:
     st.error(f"Prediction error: {str(e)}")
     st.stop()
 
-# Display predictions
+
 st.header("Price Scenarios")
 col1, col2 = st.columns(2)
 with col1:
@@ -123,7 +122,7 @@ with col2:
 if st.button("Refresh Scenarios"):
     st.rerun()
 
-# Trends section with line chart
+
 st.header("Real-Time Pricing Trends")
 occupancy_range = np.linspace(0.5, 1.0, 50)
 trend_data = pd.DataFrame({
@@ -137,7 +136,7 @@ fig = px.line(trend_data, x='occupancy_rate', y='dynamic_adr',
 fig.update_traces(mode='lines+markers')
 st.plotly_chart(fig)
 
-# Summary and export
+
 st.header("Analysis Summary")
 summary = pd.DataFrame({
     'Scenario': ['Base', 'Alternate'],
@@ -147,7 +146,7 @@ summary = pd.DataFrame({
 })
 st.table(summary.style.format({'Occupancy Rate': '{:.2f}', 'Competitor ADR': '{:.0f}', 'Predicted ADR': '{:.2f}'}))
 
-# Export report
+
 report = summary.to_string(index=False)
 report_buffer = io.StringIO()
 report_buffer.write(f"Dynamic Pricing Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
@@ -155,6 +154,6 @@ report_buffer.write("-" * 50 + "\n")
 report_buffer.write(report)
 st.download_button(label="Download Report", data=report_buffer.getvalue(), file_name=f"pricing_report_{datetime.now().strftime('%Y%m%d_%H%M')}.txt")
 
-# Footer
+
 st.markdown("---")
 st.caption("Developed by Shrey Chandel | 2025")
